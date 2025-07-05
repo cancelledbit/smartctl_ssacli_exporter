@@ -11,14 +11,17 @@ import (
 )
 
 var (
-	listenAddr  = flag.String("listen", ":9633", "address for exporter")
-	metricsPath = flag.String("path", "/metrics", "URL path for surfacing collected metrics")
+	numerationType = flag.String("numerationType", "default", "numeration type, default or from_one")
+	listenAddr     = flag.String("listen", ":9633", "address for exporter")
+	metricsPath    = flag.String("path", "/metrics", "URL path for surfacing collected metrics")
 )
 
 func main() {
 	flag.Parse()
-
-	prometheus.MustRegister(exporter.New())
+	if numerationType == nil {
+		panic("numeration type is required")
+	}
+	prometheus.MustRegister(exporter.New(exporter.NumerationType(*numerationType)))
 
 	http.Handle(*metricsPath, promhttp.Handler())
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

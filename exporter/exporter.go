@@ -15,15 +15,25 @@ import (
 //
 // It implements the exporter.Collector interface in order to register
 // with Prometheus.
+
+type NumerationType string
+
+const (
+	FromOne NumerationType = "from_one"
+)
+
 type Exporter struct {
+	DiskNumeration NumerationType
 }
 
 var _ prometheus.Collector = &Exporter{}
 
 // New creates a new Exporter which collects metrics by creating a apcupsd
 // client using the input ClientFunc.
-func New() *Exporter {
-	return &Exporter{}
+func New(n NumerationType) *Exporter {
+	return &Exporter{
+		DiskNumeration: n,
+	}
 }
 
 // Describe sends all the descriptors of the collectors included to
@@ -50,7 +60,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	}
 
 	physDisk := strings.Split(string(out), "\n")
-	physDiskN := 1
+	physDiskN := e.getFirstDiskNumber()
 	for _, physDisk := range physDisk {
 		if physDisk != "" {
 			collector.NewSsacliPhysDiskCollector(physDisk, conID).Collect(ch)
@@ -75,4 +85,15 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 			collector.NewSsacliLogDiskCollector(logDisk, conID).Collect(ch)
 		}
 	}
+}
+
+func (e *Exporter) getFirstDiskNumber() int {
+	var physDiskN int
+	switch e.DiskNumeration {
+	case FromOne:
+		physDiskN = 1
+	default:
+		physDiskN = 0
+	}
+	return physDiskN
 }
