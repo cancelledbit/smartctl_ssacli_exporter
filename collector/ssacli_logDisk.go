@@ -3,9 +3,9 @@ package collector
 import (
 	"os/exec"
 
-	"github.com/jakubjastrabik/smartctl_ssacli_exporter/parser"
+	"github.com/cancelledbit/smartctl_ssacli_exporter/parser"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/common/log"
+	"log"
 )
 
 var _ prometheus.Collector = &SsacliLogDiskCollector{}
@@ -62,7 +62,7 @@ func (c *SsacliLogDiskCollector) Describe(ch chan<- *prometheus.Desc) {
 // Handle error
 func (c *SsacliLogDiskCollector) Collect(ch chan<- prometheus.Metric) {
 	if desc, err := c.collect(ch); err != nil {
-		log.Debugln("[ERROR] failed collecting metric %v: %v", desc, err)
+		log.Printf("[ERROR] failed collecting metric %v: %v", desc, err)
 		ch <- prometheus.NewInvalidMetric(desc, err)
 		return
 	}
@@ -77,7 +77,7 @@ func (c *SsacliLogDiskCollector) collect(ch chan<- prometheus.Metric) (*promethe
 	out, err := exec.Command("bash", "-c", cmd).CombinedOutput()
 
 	if err != nil {
-		log.Debugln("[ERROR] smart log: \n%s\n", out)
+		log.Printf("[ERROR] smart log: \n%s\n", out)
 		return nil, err
 	}
 
